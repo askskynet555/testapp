@@ -91,27 +91,11 @@ app.post('/' + tableName + '/Update', function (req, res) {
         itrCountForWhere += 1;
     }
     console.log(sqlUpdate);
-    console.log("Update : Intializing connection");
-    conn.connect().then(function(){
-        let sqlQuery = sqlUpdate;
-        let req = new sql.Request(conn);
-        console.log("Update : Connected");
-        req.query(sqlQuery).then(function(result){
-            console.log("Update : Query Ran Successfully");
-            console.log(result);
-            conn.close();
-            console.log("Update : Closed SQL Connection");
-        }).catch(function(err){
-            conn.close();
-            console.log("Update : Error Running Query");
-            res.status(400).send(err);    
-        });
-    }).catch(function(err){
-        conn.close();
-        console.log("Update : Error Connecting To SQL Server");
-        res.status(400).send(err);
-    });
-    res.redirect("/");
+    getSQLData(sqlUpdate)
+        .then(function(value){
+            console.table(value);
+            res.redirect("/");
+````    });
 });
 
 app.post('/' + tableName + '/Delete', function (req, res) {
@@ -134,27 +118,11 @@ app.post('/' + tableName + '/Delete', function (req, res) {
         itrCount += 1;
     }
     console.log(sqlDelete);
-    console.log("Delete : Intializing connection");
-    conn.connect().then(function(){
-        let sqlQuery = sqlDelete;
-        let req = new sql.Request(conn);
-        console.log("Delete : Connected");
-        req.query(sqlQuery).then(function(result){
-            console.log("Delete : Query Ran Successfully");
-            console.log(result);
-            conn.close();
-            console.log("Delete : Closed SQL Connection");
-        }).catch(function(err){
-            conn.close();
-            console.log("Delete : Error Running Query");
-            res.status(400).send(err);    
-        });
-    }).catch(function(err){
-        conn.close();
-        console.log("Delete : Error Connecting To SQL Server");
-        res.status(400).send(err);
-    });
-    res.redirect("/");
+    getSQLData(sqlDelete)
+        .then(function(value){
+            console.table(value);
+            res.redirect("/");
+````    });
 });
 
 
@@ -184,27 +152,11 @@ app.post('/' + tableName + '/Insert', function (req, res) {
         itrCount += 1;
     }
     console.log(sqlInsert);
-    console.log("sqlInsert : Intializing connection");
-    conn.connect().then(function(){
-        let sqlQuery = sqlInsert;
-        let req = new sql.Request(conn);
-        console.log("Insert : Connected");
-        req.query(sqlQuery).then(function(result){
-            console.log("Insert : Query Ran Successfully");
-            console.log(result);
-            conn.close();
-            console.log("Insert : Closed SQL Connection");
-        }).catch(function(err){
-            conn.close();
-            console.log("Insert : Error Running Query");
-            res.status(400).send(err);    
-        });
-    }).catch(function(err){
-        conn.close();
-        console.log("Insert : Error Connecting To SQL Server");
-        res.status(400).send(err);
-    });
-    res.redirect("/");
+    getSQLData(sqlInsert)
+        .then(function(value){
+            console.table(value);
+            res.redirect("/");
+````    });
 });
 
 app.listen(3000);
