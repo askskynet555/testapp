@@ -2,7 +2,6 @@ const express = require('express');
 const app = express();
 const sql = require("mssql");
 let conn = require("./connection/connect")();
-let tableName = "Employee";
 
 app.set('views', './pages');
 app.set('view engine', 'ejs'); 
@@ -10,9 +9,8 @@ let bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({ extended: false }));
 
 function getSQLData(sqlQuery){
-    return new Promise(function(resolve,reject){
-        try
-        {
+    console.log("inside getSQLData");
+    return new Promise(function(resolve){
             console.log("Intializing connection");
             conn.connect().then(function(){
                 let req = new sql.Request(conn);
@@ -24,24 +22,31 @@ function getSQLData(sqlQuery){
                     conn.close();
                     console.log("Closed SQL Connection");
                     resolve(resultData);
-                }).catch(function(err){
-                    conn.close();
-                    res.status(400).send(err);    
-                });
-            }).catch(function(err){
-                conn.close();
-                res.status(400).send(err);
-            });
-        }
-        catch(err)
-        {
-            reject(err);
-        }
+                })
+            })
     });
-};
+}
 
 app.get('/', function (req, res) {
-        console.log("root");
+    console.log("home tableList");
+    let sqlQueryTableList = 
+    `   select 
+            c.name as tableName
+        from 
+            sys.tables c 
+    `;
+    let resultTableList;
+    getSQLData(sqlQueryTableList).then(function(value){
+            resultTableList = value;
+            console.table(resultTableList.recordset);
+            console.log("render home");
+            res.render("home", {tableData : resultTableList.recordset});
+    })
+});
+
+app.get('/:tableName', function (req, res) {
+        let tableName = req.params.tableName;
+        console.log("table edit form");
         let sqlQuery = "select * from " + tableName;
         let sqlQueryMetadata = 
         `   select 
@@ -64,18 +69,14 @@ app.get('/', function (req, res) {
             .then(function(value){
                 resultMetadata = value;
                 console.table(resultMetadata.recordset);
-                res.render("home", {tableName : tableName, tableData : resultData.recordset, tableMetadata : resultMetadata.recordset});
-            })
-            .catch(function(err){
-                console.log(err);
+                console.log("render table edit form");
+                res.render("table", {tableName : tableName, tableData : resultData.recordset, tableMetadata : resultMetadata.recordset});
             })
         })
-        .catch(function(err){
-            console.log(err);
-        });        
 });
 
-app.post('/' + tableName + '/Update', function (req, res) {
+app.post('/:tableName/Update', function (req, res) {
+    let tableName = req.params.tableName;
     let sqlUpdate = "update " + tableName + " set ";
     //res.send(req.body);
     let intialValue = JSON.parse(req.body["IntialValue"]);
@@ -105,17 +106,15 @@ app.post('/' + tableName + '/Update', function (req, res) {
         itrCountForWhere += 1;
     }
     console.log(sqlUpdate);
-    getSQLData(sqlUpdate)
-        .then(function(value){
-            console.log(value);
-            res.redirect("/");
-````    })
-        .catch(function(err){
-            console.log(err);
-        });
+    getSQLData(sqlUpdate).then(function(value){
+        console.log(value);
+        console.log("redirect to table edit form");
+        res.redirect("/" + tableName);
+````})
 });
 
-app.post('/' + tableName + '/Delete', function (req, res) {
+app.post('/:tableName/Delete', function (req, res) {
+    let tableName = req.params.tableName;
     let sqlDelete = "delete from " + tableName + " where ";
     //res.send(req.body);
     let intialValue = JSON.parse(req.body["IntialValue"]);    
@@ -135,18 +134,15 @@ app.post('/' + tableName + '/Delete', function (req, res) {
         itrCount += 1;
     }
     console.log(sqlDelete);
-    getSQLData(sqlDelete)
-        .then(function(value){
-            console.log(value);
-            res.redirect("/");
-````    })
-        .catch(function(err){
-            console.log(err);
-        });
+    getSQLData(sqlDelete).then(function(value){
+        console.log(value);
+        res.redirect("/" + tableName);
+````})
 });
 
 
-app.post('/' + tableName + '/Insert', function (req, res) {
+app.post('/:tableName/Insert', function (req, res) {
+    let tableName = req.params.tableName;
     let sqlInsert = "insert into " + tableName + " ( ";
     //res.send(req.body);
     let attributeCount = Object.keys(req.body).length;
@@ -172,14 +168,10 @@ app.post('/' + tableName + '/Insert', function (req, res) {
         itrCount += 1;
     }
     console.log(sqlInsert);
-    getSQLData(sqlInsert)
-        .then(function(value){
-            console.log(value);
-            res.redirect("/");
-````    })
-        .catch(function(err){
-            console.log(err);
-        });
+    getSQLData(sqlInsert).then(function(value){
+        console.log(value);
+        res.redirect("/" + tableName);
+````})
 });
 
 app.listen(3000);
