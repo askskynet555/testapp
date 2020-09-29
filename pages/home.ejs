@@ -5,11 +5,26 @@
     <h1><%= tableName %></h1>
         <table border="1">
             <tr>
-                <td>PersonID</td>
-                <td>LastName</td>
-                <td>FirstName</td>
-                <td>Address</td>
-                <td>City</td>
+                <%
+                        var values = [];
+                        if(tableMetadata.length!=0){
+                            tableMetadata.forEach(function(data){
+                                var keys = Object.keys(data);
+                                keys.forEach(function(key){
+                                    if(key = 'ColumnName'){
+                                        if(values.indexOf(data[key]) === -1){
+                                            values.push(data[key]);
+                                        }
+                                    }
+                                })
+                            })
+                        }    
+                        values.forEach(function(value){
+                    %>
+                        <th><%= value %></th>
+                    <% 
+                        })
+                    %>
                 <td>Edit</td>
                 <td>Delete</td>
             </tr> 
