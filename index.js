@@ -11,29 +11,37 @@ app.use(bodyParser.urlencoded({ extended: false }));
 
 function getSQLData(sqlQuery){
     return new Promise(function(resolve,reject){
-        console.log("Intializing connection");
-        conn.connect().then(function(){
-            let req = new sql.Request(conn);
-            console.log("Connected");
-            req.query(sqlQuery).then(function(resultData){
-                console.log("Query Ran Successfully");
-                //console.table(resultData.recordset);
-                //console.log(resultData.recordset);
-                conn.close();
-                console.log("Closed SQL Connection");
-                resolve(resultData);
+        try
+        {
+            console.log("Intializing connection");
+            conn.connect().then(function(){
+                let req = new sql.Request(conn);
+                console.log("Connected");
+                req.query(sqlQuery).then(function(resultData){
+                    console.log("Query Ran Successfully");
+                    //console.table(resultData.recordset);
+                    //console.log(resultData.recordset);
+                    conn.close();
+                    console.log("Closed SQL Connection");
+                    resolve(resultData);
+                }).catch(function(err){
+                    conn.close();
+                    res.status(400).send(err);    
+                });
             }).catch(function(err){
                 conn.close();
-                res.status(400).send(err);    
+                res.status(400).send(err);
             });
-        }).catch(function(err){
-            conn.close();
-            res.status(400).send(err);
-        });
-    })
+        }
+        catch(err)
+        {
+            reject(err);
+        }
+    });
 };
 
 app.get('/', function (req, res) {
+        console.log("root");
         let sqlQuery = "select * from " + tableName;
         let sqlQueryMetadata = 
         `   select 
@@ -58,7 +66,13 @@ app.get('/', function (req, res) {
                 console.table(resultMetadata.recordset);
                 res.render("home", {tableName : tableName, tableData : resultData.recordset, tableMetadata : resultMetadata.recordset});
             })
-        })        
+            .catch(function(err){
+                console.log(err);
+            })
+        })
+        .catch(function(err){
+            console.log(err);
+        });        
 });
 
 app.post('/' + tableName + '/Update', function (req, res) {
@@ -72,10 +86,10 @@ app.post('/' + tableName + '/Update', function (req, res) {
     for(let attributename in req.body){
         //console.log(attributename + ": " + req.body[attributename]);
         if(itrCount == attributeCount) {
-            sqlUpdate = sqlUpdate + ` ` + attributename + ` = '` + req.body[attributename] + `' where `;
+            sqlUpdate = sqlUpdate + ` [` + attributename + `] = '` + req.body[attributename] + `' where `;
         }
         else {
-            sqlUpdate = sqlUpdate + ` ` + attributename + ` = '` + req.body[attributename] + `' ,`;
+            sqlUpdate = sqlUpdate + ` [` + attributename + `] = '` + req.body[attributename] + `' ,`;
         }
         itrCount += 1;
     }
@@ -83,19 +97,22 @@ app.post('/' + tableName + '/Update', function (req, res) {
     for(let attributename in intialValue){
         //console.log(attributename + ": " + intialValue[attributename]);
         if(itrCountForWhere == attributeCount) {
-            sqlUpdate = sqlUpdate + ` ` + attributename + ` = '` + intialValue[attributename] + `';`;
+            sqlUpdate = sqlUpdate + ` [` + attributename + `] = '` + intialValue[attributename] + `';`;
         }
         else {
-            sqlUpdate = sqlUpdate + ` ` + attributename + ` = '` + intialValue[attributename] + `' and`;
+            sqlUpdate = sqlUpdate + ` [` + attributename + `] = '` + intialValue[attributename] + `' and`;
         }        
         itrCountForWhere += 1;
     }
     console.log(sqlUpdate);
     getSQLData(sqlUpdate)
         .then(function(value){
-            console.table(value);
+            console.log(value);
             res.redirect("/");
-````    });
+````    })
+        .catch(function(err){
+            console.log(err);
+        });
 });
 
 app.post('/' + tableName + '/Delete', function (req, res) {
@@ -110,19 +127,22 @@ app.post('/' + tableName + '/Delete', function (req, res) {
     for(let attributename in intialValue){
         //console.log(attributename + ": " + intialValue[attributename]);
         if(itrCount == attributeCount) {
-            sqlDelete = sqlDelete + ` ` + attributename + ` = '` + intialValue[attributename] + `';`;
+            sqlDelete = sqlDelete + ` [` + attributename + `] = '` + intialValue[attributename] + `';`;
         }
         else {
-            sqlDelete = sqlDelete + ` ` + attributename + ` = '` + intialValue[attributename] + `' and`;
+            sqlDelete = sqlDelete + ` [` + attributename + `] = '` + intialValue[attributename] + `' and`;
         }        
         itrCount += 1;
     }
     console.log(sqlDelete);
     getSQLData(sqlDelete)
         .then(function(value){
-            console.table(value);
+            console.log(value);
             res.redirect("/");
-````    });
+````    })
+        .catch(function(err){
+            console.log(err);
+        });
 });
 
 
@@ -154,9 +174,12 @@ app.post('/' + tableName + '/Insert', function (req, res) {
     console.log(sqlInsert);
     getSQLData(sqlInsert)
         .then(function(value){
-            console.table(value);
+            console.log(value);
             res.redirect("/");
-````    });
+````    })
+        .catch(function(err){
+            console.log(err);
+        });
 });
 
 app.listen(3000);
