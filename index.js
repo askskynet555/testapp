@@ -8,24 +8,27 @@ app.set('view engine', 'ejs');
 let bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({ extended: false }));
 
-function getSQLData(sqlQuery){
+async function getSQLData(sqlQuery){
     console.log("inside getSQLData");
-    return new Promise(function(resolve){
-            console.log("Intializing connection");
-            conn.connect().then(function(){
-                let req = new sql.Request(conn);
-                console.log("Connected");
-                req.query(sqlQuery).then(function(resultData){
-                    console.log("Query Ran Successfully");
-                    //console.table(resultData.recordset);
-                    //console.log(resultData.recordset);
-                    conn.close();
-                    console.log("Closed SQL Connection");
-                    resolve(resultData);
-                })
-            })
-    });
+    try{    
+        console.log("Intializing connection");
+        await conn.connect();
+        let req = new sql.Request(conn);
+        console.log("Connected");
+        let resultData = await req.query(sqlQuery);
+        console.log("Query Ran Successfully");
+        //console.table(resultData.recordset);
+        //console.log(resultData.recordset);
+        conn.close();
+        console.log("Closed SQL Connection");
+        return resultData;
+    } catch (err){
+        console.log(err);
+        throw err;
+    }        
 }
+
+app.get('/favicon.ico', function (req, res){ res.status(204).end()});
 
 app.get('/', function (req, res) {
     console.log("home tableList");
@@ -45,34 +48,38 @@ app.get('/', function (req, res) {
 });
 
 app.get('/:tableName', function (req, res) {
-        let tableName = req.params.tableName;
-        console.log("table edit form");
-        let sqlQuery = "select * from " + tableName;
-        let sqlQueryMetadata = 
-        `   select 
-                c.name as ColumnName, c.column_id, t.name as DataType, c.max_length, c.precision, c.scale 
-            from 
-                sys.columns c 
-                left join sys.types t on c.user_type_id = t.user_type_id
-            where 
-                c.object_id = object_id('`+ tableName + `');
-        `;
-        let resultData;
-        let resultMetadata;
-        getSQLData(sqlQuery)
+    let tableName = req.params.tableName;
+    console.log("table edit form");
+    let sqlQuery = "select * from " + tableName;
+    let sqlQueryMetadata = 
+    `   select 
+            c.name as ColumnName, c.column_id, t.name as DataType, c.max_length, c.precision, c.scale 
+        from 
+            sys.columns c 
+            left join sys.types t on c.user_type_id = t.user_type_id
+        where 
+            c.object_id = object_id('`+ tableName + `');
+    `;
+    let resultData;
+    let resultMetadata;
+    getSQLData(sqlQuery)
+    .then(function(value){
+        resultData = value;
+        console.table(resultData.recordset);
+    })
+    .then(function(value){
+        getSQLData(sqlQueryMetadata)
         .then(function(value){
-            resultData = value;
-            console.table(resultData.recordset);
+            resultMetadata = value;
+            console.table(resultMetadata.recordset);
+            console.log("render table edit form");
+            res.render("table", {tableName : tableName, tableData : resultData.recordset, tableMetadata : resultMetadata.recordset});
+        }).catch(function(error){
+            console.log(error);
         })
-        .then(function(value){
-            getSQLData(sqlQueryMetadata)
-            .then(function(value){
-                resultMetadata = value;
-                console.table(resultMetadata.recordset);
-                console.log("render table edit form");
-                res.render("table", {tableName : tableName, tableData : resultData.recordset, tableMetadata : resultMetadata.recordset});
-            })
-        })
+    }).catch(function(error){
+        console.log(error);
+    })
 });
 
 app.post('/:tableName/Update', function (req, res) {
@@ -110,7 +117,9 @@ app.post('/:tableName/Update', function (req, res) {
         console.log(value);
         console.log("redirect to table edit form");
         res.redirect("/" + tableName);
-````})
+    }).catch(function(error){
+        console.log(error);
+    })
 });
 
 app.post('/:tableName/Delete', function (req, res) {
@@ -137,7 +146,9 @@ app.post('/:tableName/Delete', function (req, res) {
     getSQLData(sqlDelete).then(function(value){
         console.log(value);
         res.redirect("/" + tableName);
-````})
+    }).catch(function(error){
+        console.log(error);
+    })
 });
 
 
@@ -171,7 +182,9 @@ app.post('/:tableName/Insert', function (req, res) {
     getSQLData(sqlInsert).then(function(value){
         console.log(value);
         res.redirect("/" + tableName);
-````})
+    }).catch(function(error){
+        console.log(error);
+    })
 });
 
 app.listen(3000);
