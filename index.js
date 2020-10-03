@@ -2,6 +2,7 @@ const express = require('express');
 const app = express();
 const sql = require("mssql");
 let conn = require("./connection/connect")();
+let htmlTagMap = require("./helper/inputmap");
 
 app.set('views', './pages');
 app.set('view engine', 'ejs'); 
@@ -53,7 +54,7 @@ app.get('/:tableName', function (req, res) {
     let sqlQuery = "select * from " + tableName;
     let sqlQueryMetadata = 
     `   select 
-            c.name as ColumnName, c.column_id, t.name as DataType, c.max_length, c.precision, c.scale 
+            c.name as ColumnName, c.column_id, t.user_type_id, t.name as DataType, c.max_length, c.precision, c.scale 
         from 
             sys.columns c 
             left join sys.types t on c.user_type_id = t.user_type_id
@@ -66,11 +67,23 @@ app.get('/:tableName', function (req, res) {
     .then(function(value){
         resultData = value;
         console.table(resultData.recordset);
+        //console.table(resultData.recordset.columns);
     })
     .then(function(value){
         getSQLData(sqlQueryMetadata)
         .then(function(value){
             resultMetadata = value;
+            resultMetadata.recordset.forEach(function(rows){
+                //Add html input type
+                for (var key in rows){
+                    if (rows.hasOwnProperty(key)){
+                      var val = rows[key];
+                      if(key == "user_type_id"){
+                        rows.html_input_type = htmlTagMap[parseInt(val,10)]["html_input_type"];
+                      }
+                    }
+                }
+            });
             console.table(resultMetadata.recordset);
             console.log("render table edit form");
             res.render("table", {tableName : tableName, tableData : resultData.recordset, tableMetadata : resultMetadata.recordset});
