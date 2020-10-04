@@ -12,6 +12,7 @@
             <tr>
                 <%
                         var columnList = [];
+                        var inputTypeList = {};
                         if(tableMetadata.length!=0){
                             tableMetadata.forEach(function(data){
                                 var keys = Object.keys(data);
@@ -19,11 +20,12 @@
                                     if(key = 'ColumnName'){
                                         if(columnList.indexOf(data[key]) === -1){
                                             columnList.push(data[key]);
+                                            inputTypeList[data[key]] = data["html_input_type"];
                                         }
                                     }
                                 })
                             })
-                        }    
+                        }
                         columnList.forEach(function(value){
                     %>
                         <th><%= value %></th>
@@ -41,7 +43,7 @@
             <form id= "<%= tableName + '.' + i %>" method= "post" >
             <tr>
                     <% Object.keys(data).forEach(function(key) { %>
-                        <td><input type="text" name="<%= key %>" value="<%= data[key] %>"></td>
+                        <td><input type="<%= inputTypeList[key] %>" name="<%= key %>" value="<%= data[key] %>"></td>
                     <% }); %>
                     <td>
                         <button type="Submit" formaction ="<%= tableName + '/Update' %>">Update</button>
@@ -57,7 +59,7 @@
                     <%
                         columnList.forEach(function(value){
                     %>
-                       <td><input type="text" name="<%= value %>"></td>
+                       <td><input type="<%= inputTypeList[value] %>" name="<%= value %>"></td>
                     <% 
                        })
                     %>
