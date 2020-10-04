@@ -107,10 +107,18 @@ app.post('/:tableName/Update', function (req, res) {
     for(let attributename in req.body){
         //console.log(attributename + ": " + req.body[attributename]);
         if(itrCount == attributeCount) {
-            sqlUpdate = sqlUpdate + ` [` + attributename + `] = '` + req.body[attributename] + `' where `;
+            if(req.body[attributename] == 'null'){
+                sqlUpdate = sqlUpdate + ` [` + attributename + `] = null where `;
+            }else{
+                sqlUpdate = sqlUpdate + ` [` + attributename + `] = '` + req.body[attributename] + `' where `;
+            }
         }
         else {
-            sqlUpdate = sqlUpdate + ` [` + attributename + `] = '` + req.body[attributename] + `' ,`;
+            if(req.body[attributename] == 'null'){
+                sqlUpdate = sqlUpdate + ` [` + attributename + `] = null ,`;
+            }else{
+                sqlUpdate = sqlUpdate + ` [` + attributename + `] = '` + req.body[attributename] + `' ,`;
+            }
         }
         itrCount += 1;
     }
@@ -118,10 +126,19 @@ app.post('/:tableName/Update', function (req, res) {
     for(let attributename in intialValue){
         //console.log(attributename + ": " + intialValue[attributename]);
         if(itrCountForWhere == attributeCount) {
-            sqlUpdate = sqlUpdate + ` [` + attributename + `] = '` + intialValue[attributename] + `';`;
+            console.log(intialValue[attributename]);
+            if(intialValue[attributename] == null){
+                sqlUpdate = sqlUpdate + ` [` + attributename + `] is null;`;
+            }else{
+                sqlUpdate = sqlUpdate + ` [` + attributename + `] = '` + intialValue[attributename] + `';`;
+            }
         }
         else {
-            sqlUpdate = sqlUpdate + ` [` + attributename + `] = '` + intialValue[attributename] + `' and`;
+            if(intialValue[attributename] == null){
+                sqlUpdate = sqlUpdate + ` [` + attributename + `] is null and`;
+            }else{
+                sqlUpdate = sqlUpdate + ` [` + attributename + `] = '` + intialValue[attributename] + `' and`;
+            }
         }        
         itrCountForWhere += 1;
     }
@@ -148,10 +165,18 @@ app.post('/:tableName/Delete', function (req, res) {
     for(let attributename in intialValue){
         //console.log(attributename + ": " + intialValue[attributename]);
         if(itrCount == attributeCount) {
-            sqlDelete = sqlDelete + ` [` + attributename + `] = '` + intialValue[attributename] + `';`;
+            if(intialValue[attributename] == null){
+                sqlDelete = sqlDelete + ` [` + attributename + `] is null ;`;
+            }else{
+                sqlDelete = sqlDelete + ` [` + attributename + `] = '` + intialValue[attributename] + `';`;
+            }
         }
         else {
-            sqlDelete = sqlDelete + ` [` + attributename + `] = '` + intialValue[attributename] + `' and`;
+            if(intialValue[attributename] == null){
+                sqlDelete = sqlDelete + ` [` + attributename + `] is null and`;
+            }else{
+                sqlDelete = sqlDelete + ` [` + attributename + `] = '` + intialValue[attributename] + `' and`;
+            }
         }        
         itrCount += 1;
     }
